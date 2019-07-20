@@ -37,7 +37,7 @@
 
     var foreArm = new Konva.Rect({
         x: 200,
-        y: 10,
+        y: 0,
         width: 200,
         height: 10,
         fill: '#00D2FF',
@@ -52,7 +52,6 @@
 
     layer.add(upperArm);
     layer.add(foreArm);
-
     // add cursor styling
     upperArm.on('mouseover', function() {
         document.body.style.cursor = 'pointer';
@@ -61,7 +60,6 @@
         document.body.style.cursor = 'default';
     });
 
-
     let arm = {
         start: {
         	x: 0,
@@ -69,36 +67,27 @@
         },
         sections: [
         {
-        	r: 100,
+        	r: 200,
         	theta: 1.57
         },
         {
-        	r: 100,
+        	r: 200,
         	theta: 1.57
         }]
     };
 
-
 	stage.on('mousemove', function() {
 		var mousePos = stage.getPointerPosition();
-
-
-		let theta = getPolar(mousePos.x - 50, mousePos.y - 50).theta;
-
+		let theta = getPolar(mousePos.x, mousePos.y).theta;
 		let arm1 = fabrik(arm, mousePos);
-
-		console.log(arm1);
 		let upperArmTheta = arm1.sections[0].theta;
 	    upperArm.rotation(upperArmTheta * 180 / math.pi);
-
-
 	    let foreArmTheta = arm1.sections[1].theta;
-
-
+        foreArm.x(200 * math.cos(upperArmTheta));
+        foreArm.y(200 * math.sin(upperArmTheta));
+        foreArm.rotation(foreArmTheta * 180 / math.pi);
 	    layer.batchDraw();
 	});
-
-
 
     function fabrik(arm, objective) {
         let maxLength = 0;
@@ -128,36 +117,17 @@
 
         let r = reach(arm, objective);
         return reach(r, start);
-     //    let lastPoint = sections[sections.length - 1];
-     //    console.log("lastpoint", lastPoint);
-     //    console.log("objective", objective);
-
-     //    let foreArm = subtract(objective, lastPoint);
-     //    let direction0 = foreArm.theta;
-     //    console.log("direction", direction0);
-
-    	// let section0 = sections[0];
-    	// let length0 = section0.r;
-
-     //    let section1 = sections[1];
-    	// let length1 = section1.r;
-
 
         // then we compute the point the last section would touch if we put the other end at the objective and aligned it with direction
     }
-
 
     // returns an interation on the arm position for a reach from start to objective
     function reach(backReach, objective) {
     	// joints are in cartesian coordinates and include start and end of arm
     	let joints = getJoints(backReach);
-
-
     	// sections are vectors in polar coordinates
     	let newSections = [];
     	var last = objective;
-
-
     	// iterate backwards through the joints starting at the last actual joint, not the end of the arm
     	for (let i = joints.length - 2; i >= 0; i--) {
     		let curr = joints[i];
@@ -170,13 +140,11 @@
  			});
     		last = curr;
     	}
-
     	return {
     		start: objective,
     		sections: newSections
     	};
     };
-
     // returns cartesian points of arm joints
     function getJoints(reach) {
     	joints = [];
@@ -203,12 +171,10 @@
     // Return a vector in polar coordinates that is the difference between two polar coordinates P1, P2.
     function subtract(p1, p2) {
     	if (p1.hasOwnProperty('x') && p1.hasOwnProperty('y') && p2.hasOwnProperty('x') && p2.hasOwnProperty('y')) {
-
     		return {
     			x: p2.x - p1.x,
     			y: p2.y - p1.y
     		};
-
     	} else if (p1.hasOwnProperty('r') && p1.hasOwnProperty('theta') && p2.hasOwnProperty('r') && p2.hasOwnProperty('theta')) {
     		let x1 = p1.r * math.cos(p1.theta);
 	    	let y1 = p1.r * math.sin(p1.theta);
@@ -279,116 +245,3 @@
 </script>
 
 </html>
-
-
-<!--<script type="text/javascript">-->
-<!--    // easier in cartesian-->
-
-<!--    let arm1 = [-->
-<!--        [0, 0],-->
-<!--        [0, 1],-->
-<!--        [0, 2]-->
-<!--    ];-->
-
-<!--    let arm2 = math.range(0, 4);-->
-
-<!--    console.log("range", arm2);-->
-
-
-<!--    console.log("size", size(arm1));-->
-
-
-<!--    let objective1 = new Float64Array([2, 0]);-->
-<!--    function f1(arm, objective) {-->
-<!--        let length = 0;-->
-<!--        let size1 = size(arm1);-->
-<!--        for (let i = 1; i < size1[1]; i++) {-->
-<!--            let p1 = [get(arm, 0, i - 1), get(arm, 1, i - 1)];-->
-<!--            let p2 = [get(arm, 0, i), get(arm, 1, i)];-->
-<!--            length += getLength(p1, p2);-->
-<!--        }-->
-<!--        let p0 = new Float64Array([get(arm, 0, 0), get(arm, 1, 0)]);-->
-<!--        console.log("p0", p0);-->
-<!--        console.log(objective);-->
-<!--        console.log("length", getLength(p0, objective));-->
-<!--        if (length <= getLength(p0, objective)) {-->
-<!--            var polar = getPolar(p0, objective);-->
-<!--            var theta = polar[1];-->
-<!--            console.log("theta", theta);-->
-<!--            let result = mat(p0);-->
-<!--            for (let i = 1; i < arm.length; i++) {-->
-<!--                let part = getCartesian(norm(sub(arm[i], arm[i - 1])), theta);-->
-<!--                console.log("vector: ", part);-->
-<!--                console.log("result", result);-->
-<!--                let sum1 = sum(result);-->
-<!--                console.log("sum1", sum1[0]);-->
-<!--                let s = add(part, sum1[0]);-->
-<!--                console.log("s", s);-->
-<!--                result.push(s);-->
-<!--            }-->
-<!--            console.log("result of f: ");-->
-<!--            console.log("result: ", result);-->
-<!--            return result;-->
-<!--        }-->
-<!--        return "not longer;"-->
-<!--    }-->
-
-<!--    console.log(f1(arm1, objective1));-->
-
-<!--    function getLength(p1, p2) {-->
-<!--        return norm(sub(p2, p1));-->
-<!--    }-->
-
-<!--    function getCartesian(r, theta) {-->
-<!--        let result = [r * cos(theta), r * sin(theta)];-->
-<!--        return result;-->
-<!--    }-->
-
-<!--    // coords [[x1, y1], [x2, y2]]-->
-<!--    function getPolar(p1, p2) {-->
-<!--        let cartesian = sub(p2, p1);-->
-<!--        let x = cartesian[0];-->
-<!--        let y = cartesian[1];-->
-<!--        let r = Math.pow(x*x + y*y, 1/2);-->
-<!--        let theta = Math.atan(y/x);-->
-<!--        return [r, theta];-->
-<!--    }-->
-
-
-<!--</script>-->
-<!--
-
-        // let cartesianPoints = getCartesianArray(arm);
-        // let pPrime = [objective];
-        // let reverse = sections.slice().reverse();
-
-    // function f(r, theta, start) {
-    //     let curPoint = start;
-    //     let points = start;
-    //     let T = eye(3);
-    //     for (let i = 0; i < r.length; i++) {
-    //         let X = [
-    //             [cos(theta[i]), -sin(theta[i]), 0],
-    //             [sin(theta[i]), cos(theta[i]), 0],
-    //             [0, 0, 1]
-    //         ];
-    //         T = T * X;
-    //         let Z = [
-    //             [1, 0, r[i]],
-    //             [0, 1, 0],
-    //             [0, 0, 1]
-    //         ];
-    //         T = T * Z;
-    //         curPoint = T * start;
-    //         points.concat(curPoint);
-    //     }
-    //     return points;
-    // }
-    // document.getElementById('res1').innerHTML = "The norm of <br>" + laloprint(a, true) + " is " + norm(a);
-    //
-    // function g(r, theta, start, target) {
-    //     let points = f(r, theta, start);
-    //     let pos = points[0:2][-1];
-    //     return pos - target;
-    // -->
-<!-- // } -->
