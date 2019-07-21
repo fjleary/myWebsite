@@ -1,305 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Title</title>
 </head>
 
 <script src=https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js></script>
 <script src="https://unpkg.com/konva@3.1.0/konva.js"></script>
+<body>
+    <h1 style="text-align:center;">Hi! I'm Francis.</h1>>
+    <h2>HTML Image</h2>
+    <img src="me&tea.jpg" alt="me&tea">
+
+</body>
 <div id="container"></div>
 <script>
-    var stage = new Konva.Stage({
-        container: 'container',
-        width: window.innerWidth,
-        height: window.innerHeight
-    });
+  let stage = new Konva.Stage({
+    container: 'container',
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
 
-    // add canvas element
-    var layer = new Konva.Layer();
-    stage.add(layer);
+  // add canvas element
+  let layer = new Konva.Layer();
+  stage.add(layer);
 
-    // create upperArm
-    var upperArm = new Konva.Rect({
+  let numberOfArmSections = 100;
+  let armLength = 12;
+  // These are the polar coordinates of each arm section.
+  let sections = [];
+  // These are the boxes that make up the arm.
+  let konvaSections = [];
+
+  for (let i = 0; i < numberOfArmSections; i++) {
+    let armSection = new Konva.Rect({
+      x: 0,
+      y: 0,
+      width: armLength - 5,
+      height: 10,
+      fill: '#00D2FF',
+      stroke: 'black',
+      strokeWidth: 4,
+      draggable: false,
+      offset: {
         x: 0,
-        y: 0,
-        width: 200,
-        height: 10,
-        fill: '#00D2FF',
-        stroke: 'black',
-        strokeWidth: 4,
-        draggable: false,
-        offset: {
-          x: 0,
-          y: 0
-      	}
+        y: 0
+      }
     });
-
-    // create testarm
-    var testArm = new Konva.Rect({
-        x: window.innerWidth /2,
-        y: window.innerHeight / 2,
-        width: 200,
-        height: 10,
-        fill: '#00D2FF',
-        stroke: 'black',
-        strokeWidth: 4,
-        draggable: false,
-        offset: {
-          x: 0,
-          y: 0
-        }
+    layer.add(armSection);
+    konvaSections.push(armSection);
+    sections.push({
+      r: armLength,
+      theta: 0
     });
+  }
 
+  let arm = {
+    start: {
+      x: 0,
+      y: 0
+    },
+    sections: sections
+  };
 
-    var foreArm = new Konva.Rect({
-        x: 200,
-        y: 0,
-        width: 200,
-        height: 10,
-        fill: '#00D2FF',
-        stroke: 'black',
-        strokeWidth: 4,
-        draggable: false,
-        offset: {
-          x: 0,
-          y: 0
-        }
-    });
-
-
-    var text = new Konva.Text({
-        x: 0,
-        y: 380,
-        text: 'Simple Text',
-        fontSize: 22,
-        fontFamily: 'Calibri',
-      });
-    var text2 = new Konva.Text({
-        x: 0,
-        y: 400,
-        text: 'Simple Text',
-        fontSize: 22,
-        fontFamily: 'Calibri',
-      });
-
-    // layer.add(testArm);
-    // layer.add(text);
-    // layer.add(text2);
-    layer.add(upperArm);
-    layer.add(foreArm);
-
-    let arm = {
-        start: {
-        	x: 0,
-        	y: 0
-        },
-        sections: [
-        {
-        	r: 200,
-        	theta: 1.57
-        },
-        {
-        	r: 200,
-        	theta: 1.57
-        }]
-    };
-
-	stage.on('mousemove', function() {
-		var mousePos = stage.getPointerPosition();
-		arm = fabrik(arm, mousePos);
-		let upperArmTheta = arm.sections[0].theta;
-	    upperArm.rotation(upperArmTheta * 180 / math.pi);
-        //console.log(arm);
-	    let foreArmTheta = arm.sections[1].theta;
-        let center = {
-                x: window.innerWidth / 2,
-                y: window.innerHeight / 2,
-        };
-        // let v = getPolar(center, mousePos);
-        // console.log("v", v);
-        // let theta = v.theta;
-        // //testArm.rotation(theta * 180 / math.pi);
-        //text.text(theta);
-        foreArm.x(200 * math.cos(upperArmTheta));
-        foreArm.y(200 * math.sin(upperArmTheta));
-        foreArm.rotation(foreArmTheta * 180 / math.pi);
-	    layer.batchDraw();
-	});
-
-    function fabrik(arm, objective) {
-        //console.log("start", arm.start);
-        //console.log("objective", objective);
-        let maxLength = 0;
-        let sections = arm.sections;
-        console.log("arm", arm);
-        for (let i = 0; i < sections.length; i++) {
-            let section = sections[i];
-            console.log("section", section);
-            maxLength += section.r;
-        }
-        // If the combined length is less than r of the objective we can just make a straight line to the objective.
-        console.log("maxLength", maxLength);
-        console.log("norm", norm(objective.x, objective.y));
-        if (maxLength <= norm(objective.x, objective.y)) {
-            console.log("straight arm");
-        	// New polar coords, this assumes stars is always at 0,0.
-            let newCoords = [];
-            for (let i = 0; i < sections.length; i++) {
-                let section = sections[i];
-                newCoords.push({
-                    r: section.r,
-                    theta: getPolar(objective.x, objective.y).theta
-                });
-            }
-            return {
-            	start: arm.start,
-            	sections: newCoords
-            };
-        }
-
-        // In the case where it is possible to touch the objective, we use FABRIK to find an acceptable solution.
-        // First we find the backwards reach.
-        // First find the direction from the objective to the last point in the arm.
-
-        let r = reach(arm, objective);
-        return reach(r, arm.start);
-
-        // then we compute the point the last section would touch if we put the other end at the objective and aligned it with direction
+  stage.on('mousemove', function() {
+    console.log("arm", arm);
+    let mousePos = stage.getPointerPosition();
+    arm = fabrik(arm, mousePos);
+    let x = arm.start.x;
+    let y = arm.start.y;
+    let first = 0;
+    for (let i = 0; i < numberOfArmSections; i++) {
+      let section = arm.sections[i];
+      let konvaSection = konvaSections[i];
+      let theta = section.theta;
+      konvaSection.x(x);
+      konvaSection.y(y);
+      konvaSection.rotation(theta * 180 / math.pi);
+      x = x + section.r * math.cos(theta);
+      y = y + section.r * math.sin(theta);
     }
+    layer.batchDraw();
+  });
 
-    // returns an interation on the arm position for a reach from start to objective
-    function reach(backReach, objective) {
-    	// joints are in cartesian coordinates and include start and end of arm
-    	let joints = getJoints(backReach);
-        // text2.text(JSON.stringify(joints));
-    	// sections are vectors in polar coordinates
-    	let newSections = [];
-    	var last = objective;
-    	// iterate backwards through the joints starting at the last actual joint, not the end of the arm
-    	for (let i = joints.length - 2; i >= 0; i--) {
-    		let curr = joints[i];
-    		let v = subtract(curr, last);
-    		v = getPolar(v.x, v.y);
- 			let theta = v.theta;
-    		newSections.push({
- 				r: backReach.sections[i].r,
- 				theta: theta,
- 			});
-    		last = curr;
-    	}
-    	return {
-    		start: objective,
-    		sections: newSections
-    	};
-    };
-    // returns cartesian points of arm joints
-    function getJoints(reach) {
-    	joints = [];
-    	let sections = reach.sections;
-    	let start = reach.start;
-    	joints.push({
-    		x: start.x,
-    		y: start.y
-    	});
-    	let last = start;
-    	for (let i = 0; i < sections.length; i++) {
-    		let section = sections[i];
-    		section = getCartesian(section.r, section.theta);
-    		let curr = {
-    			x: last.x + section.x,
-    			y: last.y + section.y
-    		};
-    		last = curr;
-    		joints.push(curr);
-    	}
-    	return joints;
-    };
-
-    // Return a vector in polar coordinates that is the difference between two polar coordinates P1, P2.
-    function subtract(p1, p2) {
-    	if (p1.hasOwnProperty('x') && p1.hasOwnProperty('y') && p2.hasOwnProperty('x') && p2.hasOwnProperty('y')) {
-    		return {
-    			x: p2.x - p1.x,
-    			y: p2.y - p1.y
-    		};
-    	} else if (p1.hasOwnProperty('r') && p1.hasOwnProperty('theta') && p2.hasOwnProperty('r') && p2.hasOwnProperty('theta')) {
-    		let x1 = p1.r * math.cos(p1.theta);
-	    	let y1 = p1.r * math.sin(p1.theta);
-	    	let x2 = p2.r * math.cos(p2.theta);
-	    	let y2 = p2.r * math.sin(p2.theta);
-	    	let x = x2 - x1;
-	    	let y = y2 - y1;
-	    	let theta;
-
-	    	if (x === 0) {
-	    		theta = math.pi / 2;
-	    	} else {
-	    		theta =  math.atan2(y, x);
-	    	};
-
-	    	return {
-	    		r: math.pow(x*x + y*y, 1/2),
-	    		theta: theta
-	    	};
-    	}
-    };
-
-    // Return a vector in polar coordinates that is the sum of two polar coordinates P1, P2.
-    function add(p1, p2) {
-
-    };
-
-    function getMultiCartesian(coords) {
-        let result = [0, 0];
-        for (let coord in coords) {
-            result += getCartesian(coord);
-        }
-    };
-
-    function norm(p1, p2) {
-        if (isNaN(p1) && isNaN(p2)) {
-            if (p1.hasOwnProperty('x') && p1.hasOwnProperty('y') && p2.hasOwnProperty('x') && p2.hasOwnProperty('y')) {
-                return math.pow(x*x + y*y, 1/2);
-            } else if (p1.hasOwnProperty('r') && p1.hasOwnProperty('theta') && p2.hasOwnProperty('r') && p2.hasOwnProperty('theta')) {
-                p1 = getCartesian(p1);
-                p2 = getCartesian(p2);
-                return norm(p1, p2);
-            }
-        } else {
-            return math.pow(p1*p1 + p2*p2, 1/2);
-        }
+  function fabrik(arm, objective) {
+    let maxLength = 0;
+    let sections = arm.sections;
+    for (let i = 0; i < sections.length; i++) {
+      let section = sections[i];
+      maxLength += section.r;
     }
+    // If the combined length is less than r of the objective we can just make a straight line to the objective.
+    if (maxLength <= norm(objective.x, objective.y)) {
+      // New polar coords, this assumes stars is always at 0,0.
+      let newCoords = [];
+      for (let i = 0; i < sections.length; i++) {
+        let section = sections[i];
+        newCoords.push({
+          r: section.r,
+          theta: getPolar(objective.x, objective.y).theta
+        });
+      }
+      return {
+        start: arm.start,
+        sections: newCoords
+      };
+    }
+    // In the case where it is possible to touch the objective, we use FABRIK to find an acceptable solution.
+    // First we find the backwards reach.
+    let r = reach(arm, objective);
+    //console.log("reach", r);
+    // Then we return the forward reach.
+    return reach(r, arm.start);
+  }
 
-
-    function getCartesian(r, theta) {
-         return {
-        	x: r * math.cos(theta),
-        	y: r * math.sin(theta)
-        };
+  // returns an interation on the arm position for a reach from start to objective
+  function reach(backReach, objective) {
+    // joints are in cartesian coordinates and include start and end of arm
+    let joints = getJoints(backReach);
+    // text2.text(JSON.stringify(joints));
+    // sections are vectors in polar coordinates
+    let newSections = [];
+    let last = objective;
+    // iterate backwards through the joints starting at the last actual joint, not the end of the arm
+    // then we compute the point the last section would touch if we put the other end at the objective and aligned it with direction
+    for (let i = joints.length - 2; i >= 0; i--) {
+      let curr = joints[i];
+      let v = subtract(last, curr);
+      v = getPolar(v.x, v.y);
+      let theta = v.theta;
+      let part = {
+        r: backReach.sections[i].r,
+        theta: theta,
+      };
+      newSections.push(part);
+      part = getCartesian(part.r, part.theta);
+      last = {
+        x: last.x + part.x,
+        y: last.y + part.y
+      };
+    }
+    return {
+      start: objective,
+      sections: newSections
     };
+  }
 
-    // works for one point x,y and two points p1, p2
-    function getPolar(p1, p2) {
-    	let x;
-    	let y;
-    	// is Not a Number
-    	if (isNaN(p1) && isNaN(p1)) {
-    		let cartesian = subtract(p1, p2);
-	        x = cartesian.x;
-	        y = cartesian.y;
-	    } else {
-	    	x = p1,
-	    	y = p2
-	    }
-    	let r = Math.pow(x*x + y*y, 1/2);
-        let theta = Math.atan2(y, x);
-        return {
-        	r: r,
-        	theta: theta
-        };
+  // returns cartesian points of arm joints
+  function getJoints(reach) {
+    joints = [];
+    let sections = reach.sections;
+    let start = reach.start;
+    joints.push({
+      x: start.x,
+      y: start.y
+    });
+    let last = start;
+    for (let i = 0; i < sections.length; i++) {
+      let section = sections[i];
+      section = getCartesian(section.r, section.theta);
+      let curr = {
+        x: last.x + section.x,
+        y: last.y + section.y
+      };
+      last = curr;
+      joints.push(curr);
+    }
+    return joints;
+  }
+
+  // Return a vector in polar coordinates that is the difference between two coordinates P1, P2.
+  function subtract(p1, p2) {
+    if (p1.hasOwnProperty('x') && p1.hasOwnProperty('y') && p2.hasOwnProperty('x') && p2.hasOwnProperty('y')) {
+      return {
+        x: p2.x - p1.x,
+        y: p2.y - p1.y
+      };
+    } else if (p1.hasOwnProperty('r') && p1.hasOwnProperty('theta') && p2.hasOwnProperty('r') && p2.hasOwnProperty('theta')) {
+      let x1 = p1.r * math.cos(p1.theta);
+      let y1 = p1.r * math.sin(p1.theta);
+      let x2 = p2.r * math.cos(p2.theta);
+      let y2 = p2.r * math.sin(p2.theta);
+      let x = x2 - x1;
+      let y = y2 - y1;
+      let theta;
+      if (x === 0) {
+        theta = math.pi / 2;
+      } else {
+        theta =  math.atan2(y, x);
+      };
+      return {
+        r: math.pow(x*x + y*y, 1/2),
+        theta: theta
+      };
+    }
+  }
+
+  function norm(p1, p2) {
+    if (isNaN(p1) && isNaN(p2)) {
+      if (p1.hasOwnProperty('x') && p1.hasOwnProperty('y') && p2.hasOwnProperty('x') && p2.hasOwnProperty('y')) {
+        return math.pow(x*x + y*y, 1/2);
+      } else if (p1.hasOwnProperty('r') && p1.hasOwnProperty('theta') && p2.hasOwnProperty('r')
+        && p2.hasOwnProperty('theta')) {
+        p1 = getCartesian(p1);
+        p2 = getCartesian(p2);
+        return norm(p1, p2);
+      }
+    } else {
+      return math.pow(p1*p1 + p2*p2, 1/2);
+    }
+  }
+  
+  function getCartesian(r, theta) {
+    return {
+      x: r * math.cos(theta),
+      y: r * math.sin(theta)
     };
+  }
 
+  // works for one point x,y and two points p1, p2
+  function getPolar(p1, p2) {
+    let x;
+    let y;
+    // is Not a Number
+    if (isNaN(p1) && isNaN(p1)) {
+      let cartesian = subtract(p1, p2);
+      x = cartesian.x;
+      y = cartesian.y;
+    } else {
+      x = p1;
+      y = p2;
+    }
+    let r = Math.pow(x*x + y*y, 1/2);
+    let theta = Math.atan2(y, x);
+    return {
+      r: r,
+      theta: theta
+    };
+  }
 </script>
-
 </html>
